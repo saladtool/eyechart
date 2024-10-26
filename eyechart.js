@@ -1,58 +1,68 @@
-function drawEyeChart() {
-  const svg = document.getElementById('eyechart');
-  const gridSize = 50; // Grid size in millimeters
-  const gridSpacing = 10; // Spacing between grids in millimeters
 
-  // Create a group element to hold the grid shapes
-  const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  svg.appendChild(gridGroup);
 
-  // Define the grid types
-  const gridTypes = [
-    // North type: Black grid col 0 and row 4
-    {
-      name: 'north',
-      fill: (row, col) => (col === 0 || row === 4) ? 'black' : 'white'
-    },
-    // ... other grid types (define them here)
-  ];
 
-  // Draw multiple rows of grids
-  const numRows = 10; // Number of rows
-  const gridOffset = 50; // Offset from the top of the SVG
-  
-  const shape = draw5x5Grid(100);
-  svg.appendChild(shape)
-}
+function createSetofEShapes ( startx, starty, gap, eshapeList, sideLength, scale =1, extend = 0 ) {
+  // eshape is list of ["eastShape", "northshape", ...]
 
-function draw5x5Grid(sideLength, shapeName) {
 
-  const eastShape = createNumberPairSet([[1,2], [1,3]]);
-  const northShape = createNumberPairSet([[1,2], [2,2]]);
-
-  currentShape = northShape
-
-  if (shapeName == "north") {
-    currentShape = northShape;
-  } else if (shapeName == "east") {
-    currentShape = eastShape;
-  }
-
- 
+  const realCellWith = (sideLength + extend) /5 *  scale  ;
+  const realSideLength = realCellWith * 5 ;
   const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
-  const cellWidth = Math.round(sideLength / 5) ;
-  const cellHeight = cellWidth;
+  for (i =0; i < eshapeList.length; i++ ) {
+    shapeX = startx +  i * (realSideLength + gap);
+    shapeY = starty;
+    shape = createEShape(shapeX, shapeY, realCellWith, eshapeList[i], scale, extend);
+    group.appendChild(shape)
+  }
 
-  console.log (cellWidth)
+  textX = startx +  eshapeList.length * (realSideLength + gap);
+  textY = starty;
+  const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+  // Set attributes for the text element, including font size
+  textElement.setAttribute('x', textX);
+  textElement.setAttribute('y', textY + realSideLength);
+  textElement.setAttribute('fill', 'blue');
+  textElement.setAttribute('font-size', '12px'); 
+  textElement.textContent = '5.0';
+
+  group.appendChild(textElement);
+
+  
+  return group;
+ 
+}
+
+function createEShape(startx, starty, sideLength, direction = "eastShape") {
+
+  const northShape =createNumberPairSet([[0,1], [1,1], [2,1], [3,1], [0,3], [1,3], [2,3], [3,3]]);
+  const southShape =createNumberPairSet([[4,1], [1,1], [2,1], [3,1], [4,3], [1,3], [2,3], [3,3]]);
+  const eastShape = createNumberPairSet([[1,1], [1,2], [1,3], [1,4], [3,1], [3,2], [3,3], [3,4]]);
+  const westShape = createNumberPairSet([[1,1], [1,2], [1,3], [1,0], [3,1], [3,2], [3,3], [3,0]]);
+
+  currentShape = eastShape
+
+  if (direction == "north") {
+    currentShape = northShape;
+  } else if (direction == "east") {
+    currentShape = eastShape;
+  }else if (direction == "south") {
+    currentShape = southShape;
+  } else if (direction == "west") {
+    currentShape = westShape;
+  }
+
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  const cellWidth = sideLength  ;
+  const cellHeight = cellWidth;
 
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 5; col++) {
-      console.log( row, col)
       const cell = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      cell.setAttribute("x", row * cellWidth);
-      cell.setAttribute("y", col * cellHeight);
-      console.log( row, row * cellWidth,  col, col * cellHeight)
+      cell.setAttribute("x", col * cellWidth + startx);
+      cell.setAttribute("y", row * cellHeight + starty);
       cell.setAttribute("width", cellWidth);
       cell.setAttribute("height", cellHeight);
  //     cell.setAttribute("stroke-width", 0); // Set stroke width to 0
@@ -71,7 +81,6 @@ function draw5x5Grid(sideLength, shapeName) {
 
 
 
-
 function createNumberPairSet(pairs) {
   const set = new Set();
   for (const pair of pairs) {
@@ -87,9 +96,9 @@ function isPairInSet(set, a, b) {
 }
 
 
-function drawEyeChart(svgContainer, scale = 1) {
+function drawEyeChart(svgContainer, scale = 1, extend = 0) {
 
-  let sideLength = 50
+  let sideLength = 500
 
   // Create the SVG element if it doesn't exist
   if (svgContainer.childElementCount  == 0) {
@@ -108,12 +117,11 @@ function drawEyeChart(svgContainer, scale = 1) {
 
   }
 
-
-
-  group = drawEShape(10, "eastShape", scale)
+  const eshapeList = ["north", "east", "south", "west","north", "east", "south", "west"]
+  group = createSetofEShapes(0, 0, 5, eshapeList, 10, scale, extend );
   
   svg.appendChild(group);
-  group = drawEShape(10, "eastShape", scale)
+  group = createSetofEShapes(0, 100 , 5, eshapeList, 10, scale, extend );
   
   svg.appendChild(group);
 
@@ -122,14 +130,22 @@ function drawEyeChart(svgContainer, scale = 1) {
 ///// Main Program
 let svg;
 let scale = 1;
+let extendLength = 0;
 // Get the draw button element
-const drawButton = document.getElementById("drawButton");
+const extend = document.getElementById("extend");
+const reduce =  document.getElementById("reduce");
 const svgContainer = document.getElementById("svgContainer");
 
-// Add a click event listener to the button
-drawButton.addEventListener("click", () => {
-  // Get a random side length between 100 and 200 mm
-  scale += 2
 
-  drawEyeChart(svgContainer, scale)
+// Add a click event listener to the button
+extend.addEventListener("click", () => {
+  // Get a random side length between 100 and 200 mm
+  extendLength += 1
+  drawEyeChart(svgContainer, scale, extendLength)
+});
+
+reduce.addEventListener("click", () => {
+  // Get a random side length between 100 and 200 mm
+  extendLength -= 1
+  drawEyeChart(svgContainer, scale, extendLength)
 });
