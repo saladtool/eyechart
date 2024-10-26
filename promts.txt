@@ -1,0 +1,9 @@
+Write web ui project using vscode to use javascripts svg api  to draw the several row of 5x5 grid shapes. 
+explain the basic api to draw the shape
+The svg directly use mm unit as svg support mm as unit.
+the javascripts file is named as eyechart.js . 
+Provide the entire files. 
+write a javascript function which can draw a 5x5 grid by svg. the function parameter has  the total side length of entire squre . the 5x5 grids are contained by the group elment and function return this group elment
+add a button to the webpage
+when click the button, draw the shapes again with different sidelength
+
